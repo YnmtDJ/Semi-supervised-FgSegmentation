@@ -12,6 +12,9 @@ from utils.dataset import GeneratorDataset
 
 
 def generateImageLabel(generator, opt):
+    if not os.path.isdir(os.path.join(opt.dataRoot, 'label')):
+        os.makedirs(os.path.join(opt.dataRoot, 'label'))
+
     dataset = GeneratorDataset(os.path.join(opt.dataRoot, 'label'), opt.inputSize)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True)
 
@@ -38,6 +41,9 @@ def generateImageLabel(generator, opt):
 
 
 def generateImageUnLabel(generator, opt):
+    if not os.path.isdir(os.path.join(opt.dataRoot, 'unlabel')):
+        os.makedirs(os.path.join(opt.dataRoot, 'unlabel'))
+
     dataset = GeneratorDataset(os.path.join(opt.dataRoot, 'unlabel'), opt.inputSize)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True)
 
