@@ -1,0 +1,8 @@
+##ignore the dataset##
+/dataset/label
+/dataset/unlabel
+##ignore the result##
+/result/label
+/result/unlabel
+##ignore the saved model##
+*.pth
