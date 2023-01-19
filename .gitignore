@@ -4,5 +4,7 @@
 ##ignore the result##
 /result/label
 /result/unlabel
+##ignore the .idea##
+**/.idea/
 ##ignore the saved model##
 *.pth
