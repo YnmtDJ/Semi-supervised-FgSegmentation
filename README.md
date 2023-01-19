@@ -1,7 +1,7 @@
 # foreground-segmentation-with-generative-adversarial-network
 This is the foreground segmentation task using GAN with semi-supervised training.
 # Setup Dataset
-The data set is organized in the following way:
+The data set is organized in the following way:  
 dataset/  
 &emsp;/label/  
 &emsp;&emsp;/category1/  
