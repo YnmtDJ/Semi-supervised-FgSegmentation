@@ -2,7 +2,7 @@
 This is the foreground segmentation task using GAN with semi-supervised training.
 # Setup Dataset
 The data set is organized in the following way:  
-dataset/  
+./dataset/  
 &emsp;/label/  
 &emsp;&emsp;/category1/  
 &emsp;&emsp;&emsp;/input/...  
