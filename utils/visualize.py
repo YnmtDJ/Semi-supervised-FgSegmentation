@@ -27,6 +27,7 @@ def generateImageLabel(generator, opt):
         background = background.cuda()
         transform = transforms.Grayscale()
         output = generator((transform(input)-transform(background)).abs())
+        # output = generator(input)
 
         input = make_grid(input, nrow=opt.batchSize)
         background = make_grid(background, nrow=opt.batchSize)
@@ -55,6 +56,7 @@ def generateImageUnLabel(generator, opt):
         background = background.cuda()
         transform = transforms.Grayscale()
         output = generator((transform(input)-transform(background)).abs())
+        # output = generator(input)
 
         input = make_grid(input, nrow=opt.batchSize)
         background = make_grid(background, nrow=opt.batchSize)

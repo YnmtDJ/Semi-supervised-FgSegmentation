@@ -12,6 +12,7 @@ def testG(input_G, groundtruth, background, Generator):
     torch.cuda.empty_cache()
     transform = transforms.Grayscale()
     predict = Generator((transform(input_G) - transform(background)).abs())
+    # predict = Generator(input_G)
     loss = loss_func(predict, groundtruth)
 
     return loss.item()

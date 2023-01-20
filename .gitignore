@@ -4,7 +4,8 @@
 ##ignore the result##
 /result/label
 /result/unlabel
-##ignore the .idea##
+##ignore the directory of ide##
 **/.idea/
+**/__pycache__
 ##ignore the saved model##
 *.pth

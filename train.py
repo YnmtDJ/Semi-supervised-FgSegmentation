@@ -27,6 +27,7 @@ def trainD(input_G, groundtruth, background, Generator, Discriminator, opt):
 
     transform = transforms.Grayscale()
     predict = Generator((transform(input_G)-transform(background)).abs())
+    # predict = Generator(input_G)
     output_fake = Discriminator(predict)
     label_fake = torch.zeros(size=output_fake.shape, dtype=torch.float).cuda()
     loss_fake = loss_func(output_fake, label_fake)
@@ -47,6 +48,7 @@ def trainD2(input_G, background, Generator, Discriminator, opt):
     torch.cuda.empty_cache()
     transform = transforms.Grayscale()
     predict = Generator((transform(input_G) - transform(background)).abs())
+    # predict = Generator(input_G)
     output_fake = Discriminator(predict)
     label_fake = torch.zeros(size=output_fake.shape, dtype=torch.float).cuda()
     loss_fake = loss_func(output_fake, label_fake)
@@ -72,6 +74,7 @@ def trainG(input_G, groundtruth, background, Generator, Discriminator, opt):
     torch.cuda.empty_cache()
     transform = transforms.Grayscale()
     predict = Generator((transform(input_G) - transform(background)).abs())
+    # predict = Generator(input_G)
     lossG = loss_bce(predict, groundtruth)
     # lossG = 0.
     output_fake = Discriminator(predict)
@@ -99,6 +102,7 @@ def trainG2(input_G, background, Generator, Discriminator, opt):
     torch.cuda.empty_cache()
     transform = transforms.Grayscale()
     predict = Generator((transform(input_G) - transform(background)).abs())
+    # predict = Generator(input_G)
     output_fake = Discriminator(predict)
     label = predict.clone().detach()
     label = torch.round(label)
