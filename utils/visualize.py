@@ -3,6 +3,7 @@ import os
 import torch
 import torch.utils.data
 import torchvision
+from numpy import sqrt
 from torchvision.transforms import transforms
 from torchvision.utils import make_grid
 
@@ -25,13 +26,14 @@ def generateImageLabel(generator, opt):
         input = input.cuda()
         groundtruth = groundtruth.cuda()
         background = background.cuda()
-        transform = transforms.Grayscale()
-        output = generator((transform(input)-transform(background)).abs())
-        # output = generator(input)
+        conf_map = input - background
+        output = generator(torch.cat([input, background], dim=1))
+        output = output.round()
 
         input = make_grid(input, nrow=opt.batchSize)
         background = make_grid(background, nrow=opt.batchSize)
         groundtruth = make_grid(groundtruth, nrow=opt.batchSize)
+        # conf_map = make_grid(conf_map, nrow=opt.batchSize)
         output = make_grid(output, nrow=opt.batchSize)
         img_grid = torch.cat((input, background, groundtruth, output), 1)
         path = os.path.join(opt.resultRoot, 'label', str(num).zfill(6) + ".png")
@@ -54,12 +56,13 @@ def generateImageUnLabel(generator, opt):
     for input, _, background in dataloader:
         input = input.cuda()
         background = background.cuda()
-        transform = transforms.Grayscale()
-        output = generator((transform(input)-transform(background)).abs())
-        # output = generator(input)
+        conf_map = input - background
+        output = generator(torch.cat([input, background], dim=1))
+        output = output.round()
 
         input = make_grid(input, nrow=opt.batchSize)
         background = make_grid(background, nrow=opt.batchSize)
+        # conf_map = make_grid(conf_map, nrow=opt.batchSize)
         output = make_grid(output, nrow=opt.batchSize)
         img_grid = torch.cat((input, background, output), 1)
         path = os.path.join(opt.resultRoot, 'unlabel', str(num).zfill(6) + ".png")

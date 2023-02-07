@@ -18,11 +18,13 @@ class BaseOptions:
         self.parser.add_argument('--resultRoot', type=str, default='./result', help='images result save path')
         self.parser.add_argument('--modelRoot', type=str, default='./save_models', help='trained models save path')
         self.parser.add_argument('--logRoot', type=str, default='./log', help='training log save path')
-        self.parser.add_argument('--preIterNum', type=int, default=250,
+        self.parser.add_argument('--preIterNum', type=int, default=500,
                                  help='training label first for this number iterations')
         self.parser.add_argument('--lambdaGAN1', type=float, default=1e-2, help='training label GAN loss weight')
         self.parser.add_argument('--lambdaGAN2', type=float, default=1e-3, help='training unlabel GAN loss weight')
         self.parser.add_argument('--lambdaSemi', type=float, default=1e-1, help='training unlabel Semi loss weight')
+        self.parser.add_argument('--generator', type=str, default='FgSegNet',
+                                 help='the type of generator(FgSegNet, UNet)')
         self.initialized = True
 
 

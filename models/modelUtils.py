@@ -2,11 +2,25 @@ import os
 import torch
 from models.FgSegNet.model import FgSegNet
 from models.GAN.Discriminator import FCDiscriminator2
+from models.Unet.unet import UNet
 
 
 def initNetWork(opt):
+    generator = None
+    if opt.generator == 'FgSegNet':
+        generator = initFgSegNet(opt)
+    elif opt.generator == 'UNet':
+        generator = initUNet(opt)
+    discriminator = initDiscriminator(opt)
+    if opt.cuda:
+        return generator.cuda(), discriminator.cuda()
+    else:
+        return generator, discriminator
+
+
+def initFgSegNet(opt):
     # 生成器
-    generator = FgSegNet(1)
+    generator = FgSegNet(6)
     # Freeze layers
     for layer in generator.frozenLayers:
         for param in layer.parameters():
@@ -35,7 +49,23 @@ def initNetWork(opt):
     else:
         torch.save(generator.state_dict(), G_path)
 
-    # 判别器
+    return generator
+
+
+def initUNet(opt):
+    # Generator
+    generator = UNet(4)
+    G_path = os.path.join(opt.modelRoot, str(generator) + ".pth")
+    if os.path.exists(G_path):
+        generator.load_state_dict(torch.load(G_path))
+    else:
+        torch.save(generator.state_dict(), G_path)
+
+    return generator
+
+
+def initDiscriminator(opt):
+    # Discriminator
     discriminator = FCDiscriminator2(1, 64, opt.inputSize)
     D_path = os.path.join(opt.modelRoot, str(discriminator) + ".pth")
     if os.path.exists(D_path):
@@ -43,8 +73,5 @@ def initNetWork(opt):
     else:
         torch.save(discriminator.state_dict(), D_path)
 
-    if opt.cuda:
-        return generator.cuda(), discriminator.cuda()
-    else:
-        return generator, discriminator
+    return discriminator
 

@@ -33,6 +33,8 @@ class GeneratorDataset(torch.utils.data.Dataset):
             # torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
+        self.brightness = torchvision.transforms.ColorJitter(brightness=0.8)
+
     def __len__(self):
         return len(self.input)
 
@@ -40,6 +42,7 @@ class GeneratorDataset(torch.utils.data.Dataset):
         input = cv2.imread(self.input[item])
         input = cv2.cvtColor(input, cv2.COLOR_BGR2RGB)
         input = self.transforms(input)
+        input = self.brightness(input)
         background = cv2.imread(self.background[item])
         background = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
         background = self.transforms(background)

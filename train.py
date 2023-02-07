@@ -2,6 +2,7 @@ import os
 
 import torch
 import torch.utils.data
+from numpy import sqrt
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import transforms
@@ -10,6 +11,7 @@ from models.modelUtils import initNetWork
 from options.BaseOptions import BaseOptions
 from test import testG
 from utils.dataset import GeneratorDataset
+from utils.loss_func import BinaryFocalLoss
 
 
 def trainD(input_G, groundtruth, background, Generator, Discriminator, opt):
@@ -25,9 +27,8 @@ def trainD(input_G, groundtruth, background, Generator, Discriminator, opt):
     label_real = torch.ones(size=output_real.shape, dtype=torch.float).cuda()
     loss_real = loss_func(output_real, label_real)
 
-    transform = transforms.Grayscale()
-    predict = Generator((transform(input_G)-transform(background)).abs())
-    # predict = Generator(input_G)
+    conf_map = input_G - background
+    predict = Generator(torch.cat([input_G, background], dim=1))
     output_fake = Discriminator(predict)
     label_fake = torch.zeros(size=output_fake.shape, dtype=torch.float).cuda()
     loss_fake = loss_func(output_fake, label_fake)
@@ -46,9 +47,8 @@ def trainD2(input_G, background, Generator, Discriminator, opt):
     Discriminator.requires_grad_(True)
 
     torch.cuda.empty_cache()
-    transform = transforms.Grayscale()
-    predict = Generator((transform(input_G) - transform(background)).abs())
-    # predict = Generator(input_G)
+    conf_map = input_G - background
+    predict = Generator(torch.cat([input_G, background], dim=1))
     output_fake = Discriminator(predict)
     label_fake = torch.zeros(size=output_fake.shape, dtype=torch.float).cuda()
     loss_fake = loss_func(output_fake, label_fake)
@@ -61,20 +61,16 @@ def trainD2(input_G, background, Generator, Discriminator, opt):
 def trainG(input_G, groundtruth, background, Generator, Discriminator, opt):
     loss_func = torch.nn.MSELoss()
     loss_bce = torch.nn.BCELoss()
+    loss_focal = BinaryFocalLoss()
 
     Generator.train()
     Generator.requires_grad_(True)
-    # Freeze layers
-    for layer in Generator.frozenLayers:
-        for param in layer.parameters():
-            param.requires_grad = False
     Discriminator.eval()
     Discriminator.requires_grad_(False)
 
     torch.cuda.empty_cache()
-    transform = transforms.Grayscale()
-    predict = Generator((transform(input_G) - transform(background)).abs())
-    # predict = Generator(input_G)
+    conf_map = input_G - background
+    predict = Generator(torch.cat([input_G, background], dim=1))
     lossG = loss_bce(predict, groundtruth)
     # lossG = 0.
     output_fake = Discriminator(predict)
@@ -89,20 +85,16 @@ def trainG(input_G, groundtruth, background, Generator, Discriminator, opt):
 def trainG2(input_G, background, Generator, Discriminator, opt):
     loss_func = torch.nn.MSELoss()
     loss_bce = torch.nn.BCELoss()
+    loss_focal = BinaryFocalLoss()
 
     Generator.train()
     Generator.requires_grad_(True)
-    # Freeze layers
-    for layer in Generator.frozenLayers:
-        for param in layer.parameters():
-            param.requires_grad = False
     Discriminator.eval()
     Discriminator.requires_grad_(False)
 
     torch.cuda.empty_cache()
-    transform = transforms.Grayscale()
-    predict = Generator((transform(input_G) - transform(background)).abs())
-    # predict = Generator(input_G)
+    conf_map = input_G - background
+    predict = Generator(torch.cat([input_G, background], dim=1))
     output_fake = Discriminator(predict)
     label = predict.clone().detach()
     label = torch.round(label)
@@ -174,7 +166,7 @@ if __name__ == "__main__":
                 optimizerG.step()
             else:
                 lossD = trainD(inputLabel, groundtruth, background, generator, discriminator, opt)
-                lossD2 = trainD2(inputUnLabel, bg, generator, discriminator, opt)
+                # lossD2 = trainD2(inputUnLabel, bg, generator, discriminator, opt)
                 optimizerD.step()
                 lossG = trainG(inputLabel, groundtruth, background, generator, discriminator, opt)
                 lossG2 = trainG2(inputUnLabel, bg, generator, discriminator, opt)
