@@ -4,8 +4,12 @@
 ##ignore the result##
 /result/label
 /result/unlabel
+/result/feature
 ##ignore the directory of ide##
 **/.idea/
 **/__pycache__
+**/.pytest_cache/
 ##ignore the saved model##
 *.pth
+*.rar
+*.zip

@@ -1,7 +1,9 @@
 import os
 import torch
+import torchvision.models
+
 from models.FgSegNet.model import FgSegNet
-from models.GAN.Discriminator import FCDiscriminator2
+from models.GAN.Discriminator import FCDiscriminator2, PatchDiscriminator
 from models.Unet.unet import UNet
 
 
@@ -27,7 +29,11 @@ def initFgSegNet(opt):
             param.requires_grad = False
 
     # Load VGG-16 weights
-    vgg16_weights = torch.load(os.path.join(opt.modelRoot, 'vgg16-397923af.pth'))
+    vgg_path = os.path.join(opt.modelRoot, 'vgg16-397923af.pth')
+    if not os.path.exists(vgg_path):
+        vgg16 = torchvision.models.vgg16(pretrained=True)
+        torch.save(vgg16.state_dict(), vgg_path)
+    vgg16_weights = torch.load(vgg_path)
     mapped_weights = {}
     for layer_count, (k_vgg, k_segnet) in enumerate(zip(vgg16_weights.keys(), generator.state_dict().keys())):
         # Last layer of VGG16 is not used in encoder part of the model
@@ -66,7 +72,11 @@ def initUNet(opt):
 
 def initDiscriminator(opt):
     # Discriminator
-    discriminator = FCDiscriminator2(1, 64, opt.inputSize)
+    discriminator = None
+    if opt.discriminator == 'PatchDiscriminator':
+        discriminator = PatchDiscriminator(1)
+    elif opt.discriminator == 'FCDiscriminator2':
+        discriminator = FCDiscriminator2(1, 64, opt.inputSize)
     D_path = os.path.join(opt.modelRoot, str(discriminator) + ".pth")
     if os.path.exists(D_path):
         discriminator.load_state_dict(torch.load(D_path))

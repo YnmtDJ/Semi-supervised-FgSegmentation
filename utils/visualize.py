@@ -13,8 +13,8 @@ from utils.dataset import GeneratorDataset
 
 
 def generateImageLabel(generator, opt):
-    if not os.path.isdir(os.path.join(opt.dataRoot, 'label')):
-        os.makedirs(os.path.join(opt.dataRoot, 'label'))
+    if not os.path.isdir(os.path.join(opt.resultRoot, 'label')):
+        os.makedirs(os.path.join(opt.resultRoot, 'label'))
 
     dataset = GeneratorDataset(os.path.join(opt.dataRoot, 'label'), opt.inputSize)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True)
@@ -26,9 +26,10 @@ def generateImageLabel(generator, opt):
         input = input.cuda()
         groundtruth = groundtruth.cuda()
         background = background.cuda()
-        conf_map = input - background
+        conf_map = (input - background).abs().sum(dim=1, keepdim=True).cuda()
         output = generator(torch.cat([input, background], dim=1))
-        output = output.round()
+        # output = generator(input)
+        # output = output.round()
 
         input = make_grid(input, nrow=opt.batchSize)
         background = make_grid(background, nrow=opt.batchSize)
@@ -44,8 +45,8 @@ def generateImageLabel(generator, opt):
 
 
 def generateImageUnLabel(generator, opt):
-    if not os.path.isdir(os.path.join(opt.dataRoot, 'unlabel')):
-        os.makedirs(os.path.join(opt.dataRoot, 'unlabel'))
+    if not os.path.isdir(os.path.join(opt.resultRoot, 'unlabel')):
+        os.makedirs(os.path.join(opt.resultRoot, 'unlabel'))
 
     dataset = GeneratorDataset(os.path.join(opt.dataRoot, 'unlabel'), opt.inputSize)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True)
@@ -56,9 +57,11 @@ def generateImageUnLabel(generator, opt):
     for input, _, background in dataloader:
         input = input.cuda()
         background = background.cuda()
-        conf_map = input - background
+        conf_map = (input - background).abs().mean(dim=1, keepdim=True)
         output = generator(torch.cat([input, background], dim=1))
-        output = output.round()
+        # output = generator(input)
+        # output = 0.5*output + 0.5*conf_map
+        # output = output.round()
 
         input = make_grid(input, nrow=opt.batchSize)
         background = make_grid(background, nrow=opt.batchSize)
@@ -70,6 +73,30 @@ def generateImageUnLabel(generator, opt):
         torchvision.utils.save_image(img_grid, path)
 
     print(f"Fake Image Generated")
+
+
+def generateFeatureMap(generator, opt):
+    if not os.path.isdir(os.path.join(opt.resultRoot, 'feature')):
+        os.makedirs(os.path.join(opt.resultRoot, 'feature'))
+
+    dataset = GeneratorDataset(os.path.join(opt.dataRoot, 'label'), opt.inputSize)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True)
+
+    num = 0
+    generator.eval()
+    generator.requires_grad_(False)
+    for input, groundtruth, background in dataloader:
+        input = input.cuda()
+        background = background.cuda()
+        output = generator(torch.cat([input, background], dim=1))
+
+        img_grid = make_grid(torch.ones((output.shape[0], 1, output.shape[2], output.shape[3])).cuda(), nrow=opt.batchSize)
+        for i in range(output.shape[1]):
+            feature = make_grid(output[:, i:i+1], nrow=opt.batchSize)
+            img_grid = torch.cat((img_grid, feature), 1)
+        path = os.path.join(opt.resultRoot, 'feature', str(num).zfill(6) + ".png")
+        num += 1
+        torchvision.utils.save_image(img_grid, path)
 
 
 if __name__ == '__main__':
@@ -84,4 +111,5 @@ if __name__ == '__main__':
 
     generateImageLabel(generator, opt)  # 保存图像结果
     generateImageUnLabel(generator, opt)
+    # generateFeatureMap(generator, opt)
 

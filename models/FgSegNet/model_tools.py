@@ -61,11 +61,12 @@ class SegNetUp(nn.Module):
         self.up = nn.Sequential()
         self.conv_block = nn.Sequential()
         self.conv1d_block = nn.Sequential()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
 
         if res_ch is not None:
-            self.conv1d_block.add_module("conv1d", nn.Conv1d(res_ch, out_ch, kernel_size=(1, 1)))
+            self.conv1d_block.add_module("conv1d", nn.Conv2d(res_ch, out_ch, kernel_size=(1, 1)))
 
-        self.up.add_module("Upsampling", nn.Upsample(scale_factor=2, mode='nearest'))
+        self.up.add_module("Upsampling", nn.Upsample(scale_factor=2, mode='bilinear'))
 
         self.conv_block.add_module("conv2d", nn.Conv2d(in_ch, out_ch,
                                                        kernel_size=kernel_size, padding=(int((kernel_size-1)/2))))
@@ -76,30 +77,32 @@ class SegNetUp(nn.Module):
         self.conv_block.add_module("act", activation)
 
 
-    def forward(self, inp, res=None, conv1d=False, upSampling=False):
+    def forward(self, inp, res=None, attBlock=None, conv1d=False, upSampling=False):
         """
         Args:
             inp (tensor): Input tensor
             res (tensor): Residual tensor to be merged, if res=None no skip connections
         """
         feat = self.conv_block(inp)
-        if res is None:
-            merged =feat
+        if res is None or attBlock is None:
+            merged = feat
         else:
             if conv1d is True:
                 x = self.conv1d_block(res)
             else:
                 x = res
-
-            # Global average pooling
-            feat_scaled_tensor = []
-            avg_feat_tensor = torch.mean(x.view(x.size(0), x.size(1), -1), dim=2)
-            for idx, avg_feat in enumerate(avg_feat_tensor):
-                feat_scaled_tensor.append((torch.unsqueeze(feat[idx], 0).permute(0, 2, 3, 1) * avg_feat).permute(0, 3, 1, 2))
-
-            # Adding feature map by scaled one
-            feat_scaled_tensor = torch.cat(feat_scaled_tensor, dim=0)
-            merged = feat + feat_scaled_tensor
+            #
+            # # Global average pooling
+            # feat_scaled_tensor = []
+            # avg_feat_tensor = torch.mean(x.view(x.size(0), x.size(1), -1), dim=2)
+            # for idx, avg_feat in enumerate(avg_feat_tensor):
+            #     feat_scaled_tensor.append((torch.unsqueeze(feat[idx], 0).permute(0, 2, 3, 1) * avg_feat).permute(0, 3, 1, 2))
+            #
+            # # Adding feature map by scaled one
+            # feat_scaled_tensor = torch.cat(feat_scaled_tensor, dim=0)
+            # merged = feat + feat_scaled_tensor
+            att = self.avg_pool(x)
+            merged = feat*att + feat
 
         if upSampling is True:
             output = self.up(merged)
@@ -186,3 +189,26 @@ class ConvSig(nn.Module):
 
     def forward(self, inp):
         return self.out(inp)
+
+
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(SELayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc1 = nn.Sequential(
+            nn.Linear(channel, channel // reduction),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel // reduction, channel),
+            nn.Sigmoid())
+        self.fc2 = nn.Sequential(
+            nn.Conv2d(channel, channel // reduction, 1, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channel // reduction, channel, 1, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x)
+        y = self.fc2(y)
+        return y
