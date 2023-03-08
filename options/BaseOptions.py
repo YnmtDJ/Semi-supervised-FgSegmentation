@@ -7,7 +7,7 @@ class BaseOptions:
         self.initialized = False
 
     def initialize(self):
-        self.parser.add_argument('--dataRoot', default='/kaggle/input/fgsegmentation',
+        self.parser.add_argument('--dataRoot', default='./dataset',
                                  help='path to images (should have input, groundtruth, background)')
         self.parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
         self.parser.add_argument('--lr', type=float, default=1e-4, help='the learning rate')
@@ -15,9 +15,9 @@ class BaseOptions:
         self.parser.add_argument('--startEpoch', type=int, default=0, help='epoch begin from this number')
         self.parser.add_argument('--numEpoch', type=int, default=7, help='epoch num')
         self.parser.add_argument('--inputSize', type=tuple, default=(256, 256), help='scale images to this size')
-        self.parser.add_argument('--resultRoot', type=str, default='/kaggle/working/result', help='images result save path')
-        self.parser.add_argument('--modelRoot', type=str, default='/kaggle/working/', help='trained models save path')
-        self.parser.add_argument('--logRoot', type=str, default='/kaggle/working/log', help='training log save path')
+        self.parser.add_argument('--resultRoot', type=str, default='./result', help='images result save path')
+        self.parser.add_argument('--modelRoot', type=str, default='./save_models', help='trained models save path')
+        self.parser.add_argument('--logRoot', type=str, default='./log', help='training log save path')
         self.parser.add_argument('--preIterNum', type=int, default=-1,
                                  help='training label first for this number iterations')
         self.parser.add_argument('--lambdaGAN1', type=float, default=0, help='training label GAN loss weight')
