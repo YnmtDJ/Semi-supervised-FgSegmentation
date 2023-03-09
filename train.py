@@ -191,9 +191,9 @@ if __name__ == "__main__":
                     inputTest = inputTest.cuda()
                     gtTest = gtTest.cuda()
                     bgTest = bgTest.cuda()
-                lossTest, errorTest = testG(inputTest, gtTest, bgTest, generator)
+                lossTest, accuracy, _, _, _, _ = testG(inputTest, gtTest, bgTest, generator)
                 writer.add_scalar("loss/lossTest", lossTest, iterNum)
-                writer.add_scalar("error/errorTest", errorTest, iterNum)
+                writer.add_scalar("metric/accTest", accuracy, iterNum)
 
             if iterNum % 100 == 0:  # save models
                 print("Saving models")

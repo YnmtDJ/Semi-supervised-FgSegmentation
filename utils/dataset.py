@@ -10,10 +10,10 @@ class GeneratorDataset(torch.utils.data.Dataset):
         super(GeneratorDataset, self).__init__()
         self.root = root
         self.tags = os.listdir(root)
-#         if self.tags.count("Foliage"):
-#             self.tags.remove("Foliage")
-#             self.tags.remove("PeopleAndFoliage")
-#             self.tags.remove("Snellen")
+        # if self.tags.count("Foliage"):
+        #     self.tags.remove("Foliage")
+        #     self.tags.remove("PeopleAndFoliage")
+        #     self.tags.remove("Snellen")
         self.input = []
         self.groundtruth = []
         self.background = []
