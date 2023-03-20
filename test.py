@@ -40,8 +40,11 @@ def calF1_Score(predict, groundtruth):
 def calMIoU(predict, groundtruth):
     mask1 = predict.eq(1)
     mask2 = groundtruth.eq(1)
-    MIoU = (mask1 & mask2).sum() / (mask1 | mask2).sum()
-    return MIoU
+    MIoU = 0.5*(mask1 & mask2).sum() / (mask1 | mask2).sum()
+    mask1 = predict.eq(0)
+    mask2 = groundtruth.eq(0)
+    MIoU += 0.5*(mask1 & mask2).sum() / (mask1 | mask2).sum()
+    return MIoU.item()
 
 
 def testG(input_G, groundtruth, background, Generator):

@@ -8,14 +8,11 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import transforms
 
 
-# transform
 from models.modelUtils import initNetWork
 from options.BaseOptions import BaseOptions
 from test import testG
 from utils.dataset import GeneratorDataset
 
-transform_s = transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.3)
-transform_w = transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
 
 def trainD(input_G, groundtruth, background, Generator, Discriminator, transform,  opt):
     loss_func = torch.nn.MSELoss()
@@ -64,7 +61,6 @@ def trainD2(input_G, background, Generator, Discriminator, transform, opt):
 def trainG(input_G, groundtruth, background, Generator, Discriminator, opt):
     loss_func = torch.nn.MSELoss()
     loss_bce = torch.nn.BCELoss()
-    loss_focal = BinaryFocalLoss()
 
     Generator.train()
     Generator.requires_grad_(True)
@@ -91,7 +87,6 @@ def trainG(input_G, groundtruth, background, Generator, Discriminator, opt):
 def trainG2(input_G, background, Generator, Discriminator, opt):
     loss_func = torch.nn.MSELoss()
     loss_bce = torch.nn.BCELoss(reduction='none')
-    loss_focal = BinaryFocalLoss()
 
     Generator.train()
     Generator.requires_grad_(True)
@@ -99,11 +94,13 @@ def trainG2(input_G, background, Generator, Discriminator, opt):
     Discriminator.requires_grad_(False)
 
     torch.cuda.empty_cache()
-    # conf_map = (input_G - background).abs().sum(dim=1, keepdim=True).to(input_G.device)
+    conf_map = (input_G - background).abs().sum(dim=1, keepdim=True).to(input_G.device)
     predict = Generator(torch.cat([transform_w(input_G), transform_w(background)], dim=1))
     # predict = Generator(input_G)
     # output_fake = Discriminator(predict)
     mask = predict.gt(0.95) | predict.lt(0.05)
+    mask2 = conf_map.gt(1) | conf_map.lt(0.05)
+    mask = mask & mask2
     label = torch.round(predict).clone().detach()
     predict2 = Generator(torch.cat([transform_s(input_G), transform_s(background)], dim=1))
     # predict2 = Generator(transform(input_G))
@@ -134,6 +131,9 @@ if __name__ == "__main__":
     # 优化器
     optimizerD = torch.optim.Adam(discriminator.parameters(), opt.lr)
     optimizerG = torch.optim.Adam(generator.parameters(), opt.lr)
+    # transformer
+    transform_s = transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.3)
+    transform_w = transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
     # tensorboard
     writer = SummaryWriter(opt.logRoot)
     iterLabel = iter(dataloaderLabel)

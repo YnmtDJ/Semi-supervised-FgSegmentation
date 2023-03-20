@@ -91,17 +91,8 @@ class SegNetUp(nn.Module):
                 x = self.conv1d_block(res)
             else:
                 x = res
-            #
-            # # Global average pooling
-            # feat_scaled_tensor = []
-            # avg_feat_tensor = torch.mean(x.view(x.size(0), x.size(1), -1), dim=2)
-            # for idx, avg_feat in enumerate(avg_feat_tensor):
-            #     feat_scaled_tensor.append((torch.unsqueeze(feat[idx], 0).permute(0, 2, 3, 1) * avg_feat).permute(0, 3, 1, 2))
-            #
-            # # Adding feature map by scaled one
-            # feat_scaled_tensor = torch.cat(feat_scaled_tensor, dim=0)
-            # merged = feat + feat_scaled_tensor
-            att = self.avg_pool(x)
+
+            att = attBlock(x)
             merged = feat*att + feat
 
         if upSampling is True:
