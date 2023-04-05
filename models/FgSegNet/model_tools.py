@@ -47,11 +47,9 @@ class SegNetUp(nn.Module):
         in_ch (int): Number of input channels for each conv layer
         res_ch (int): Number of channels coming from the residual, if equal to 0 and no skip connections
         out_ch (int): Number of output channels for each conv layer
-        num_rep (int): Number of repeated conv-inst_norm layers
         inst_norm (bool): Whether to use Instance norm after conv layers
         activation (torch.nn module): Activation function to be used after each conv layer
         kernel_size (int): Size of the convolutional kernels
-        dropout (booelan): Whether to apply spatial dropout at the end
     """
 
     def __init__(self, in_ch, res_ch, out_ch, inst_norm=False, activation=nn.ReLU(),
@@ -82,6 +80,9 @@ class SegNetUp(nn.Module):
         Args:
             inp (tensor): Input tensor
             res (tensor): Residual tensor to be merged, if res=None no skip connections
+            attBlock (nn.Module): channel attention network used with res
+            conv1d (bool): if True, used to change the channel of res
+            upSampling (bool): if True, unSampling the merged feature map
         """
         feat = self.conv_block(inp)
         if res is None or attBlock is None:
@@ -103,7 +104,8 @@ class SegNetUp(nn.Module):
 
 class M_FPM(nn.Module):
     """
-
+    Feature Pooling Module
+    using parallel dilated cnn(DeepLab)
     """
     def __init__(self, in_ch, out_ch, kernel_size):
         super().__init__()

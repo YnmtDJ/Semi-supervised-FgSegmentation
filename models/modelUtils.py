@@ -8,6 +8,9 @@ from models.Unet.unet import UNet
 
 
 def initNetWork(opt):
+    """
+    get the initial network
+    """
     generator = None
     if opt.generator == 'FgSegNet':
         generator = initFgSegNet(opt)

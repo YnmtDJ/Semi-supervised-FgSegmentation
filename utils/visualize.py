@@ -60,7 +60,6 @@ def generateImageUnLabel(generator, opt):
         conf_map = (input - background).abs().mean(dim=1, keepdim=True)
         output = generator(torch.cat([input, background], dim=1))
         # output = generator(input)
-        # output = 0.5*output + 0.5*conf_map
         # output = output.round()
 
         input = make_grid(input, nrow=opt.batchSize)

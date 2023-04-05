@@ -69,15 +69,7 @@ def trainG(input_G, groundtruth, background, Generator, Discriminator, opt):
 
     torch.cuda.empty_cache()
     predict = Generator(torch.cat([transform_w(input_G), transform_w(background)], dim=1))
-    # predict = Generator(input_G)
-    # mask = groundtruth.eq(0) | groundtruth.eq(1)
-    # predict = torch.masked_select(predict, mask)
-    # groundtruth = torch.masked_select(groundtruth, mask)
     lossG = loss_bce(predict, groundtruth)
-    # lossG = 0.
-#     output_fake = Discriminator(predict)
-#     label_real = torch.ones(size=output_fake.shape, dtype=torch.float).cuda()
-#     lossD = loss_func(output_fake, label_real)
     loss = lossG
     loss.backward()
 
@@ -96,17 +88,12 @@ def trainG2(input_G, background, Generator, Discriminator, opt):
     torch.cuda.empty_cache()
     conf_map = (input_G - background).abs().sum(dim=1, keepdim=True).to(input_G.device)
     predict = Generator(torch.cat([transform_w(input_G), transform_w(background)], dim=1))
-    # predict = Generator(input_G)
-    # output_fake = Discriminator(predict)
     mask = predict.gt(0.95) | predict.lt(0.05)
     mask2 = conf_map.gt(1) | conf_map.lt(0.05)
     mask = mask & mask2
     label = torch.round(predict).clone().detach()
     predict2 = Generator(torch.cat([transform_s(input_G), transform_s(background)], dim=1))
-    # predict2 = Generator(transform(input_G))
     lossG = (loss_bce(predict2, label) * mask).mean()
-    # label_real = torch.ones(size=output_fake.shape, dtype=torch.float).cuda()
-    # lossD = loss_func(output_fake, label_real)
     loss = opt.lambdaSemi*lossG
     loss.backward()
 
